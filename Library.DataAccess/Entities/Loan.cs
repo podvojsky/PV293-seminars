@@ -123,7 +123,16 @@ public class Loan
     /// </summary>
     public void ExtendDueDate(int additionalDays)
     {
-        throw new NotImplementedException();
+        if (Status != LoanStatus.Active)
+            throw new InvalidOperationException($"Cannot extend inactive loan");
+        if (additionalDays <= 0)
+            throw new InvalidOperationException($"Cannot extend loan by negative days");
+        if (IsOverdue())
+            throw new InvalidOperationException($"Cannot extend loan that is overdue");
+        if (GetLoanDuration() + additionalDays > 90)
+            throw new InvalidOperationException($"Total loan duration cannot exceed 90 days");
+
+        DueDate = DueDate.AddDays(additionalDays);
     }
 
 
