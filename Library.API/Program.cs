@@ -1,4 +1,5 @@
 using Library.API.Endpoints;
+using Library.BusinessLayer.CQRS.Queries;
 using Library.BusinessLayer.Services;
 using Library.DataAccess.Data;
 using Library.DataAccess.Repositories;
@@ -6,6 +7,11 @@ using Library.DataAccess.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(GetAllBooksQuery).Assembly);
+});
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();

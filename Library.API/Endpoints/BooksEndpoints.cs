@@ -1,5 +1,9 @@
+using Library.BusinessLayer.CQRS.Commands;
+using Library.BusinessLayer.CQRS.Events;
+using Library.BusinessLayer.CQRS.Queries;
 using Library.BusinessLayer.Dtos;
 using Library.BusinessLayer.Services;
+using MediatR;
 
 namespace Library.API.Endpoints;
 
@@ -22,17 +26,17 @@ public static class BooksEndpoints
             .ProducesValidationProblem();
     }
 
-    private static async Task<IResult> GetBooks(IBookService bookService)
+    private static async Task<IResult> GetBooks(ISender sender, CancellationToken cancellationToken)
     {
-        var books = await bookService.GetAllBooksAsync();
+        var books = await sender.Send(new GetAllBooksQuery(), cancellationToken);
         return Results.Ok(books);
     }
 
-    private static async Task<IResult> CreateBook(BookDto bookDto, IBookService bookService)
+    private static async Task<IResult> CreateBook(BookDto bookDto, IMediator mediator, CancellationToken cancellationToken)
     {
         try
         {
-            var createdBook = await bookService.CreateBookAsync(bookDto);
+            var createdBook = await mediator.Send(new CreateBookCommand(bookDto), cancellationToken);
             return Results.Created($"/api/books/{createdBook.Id}", createdBook);
         }
         catch (ArgumentException ex)
