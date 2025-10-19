@@ -1,6 +1,7 @@
-using Library.BusinessLayer.Auth.Commands;
-using Library.BusinessLayer.Auth.Queries;
-using Library.DataAccess.Constants;
+using System.Security.Claims;
+using Library.Application.Auth.Commands;
+using Library.Application.Auth.Queries;
+using Library.Domain.Constants;
 using MediatR;
 
 namespace Library.API.Endpoints;
@@ -16,26 +17,26 @@ public static class AuthEndpoints
         auth.MapPost("/register", Register)
             .WithName("Register")
             .Accepts<RegisterCommand>("application/json")
-            .Produces<RegisterResponse>(StatusCodes.Status200OK)
+            .Produces<RegisterResponse>()
             .ProducesValidationProblem()
             .AllowAnonymous();
 
         auth.MapPost("/login", Login)
             .WithName("Login")
             .Accepts<LoginCommand>("application/json")
-            .Produces<LoginResponse>(StatusCodes.Status200OK)
+            .Produces<LoginResponse>()
             .ProducesValidationProblem()
             .AllowAnonymous();
 
         auth.MapGet("/me", GetCurrentUser)
             .WithName("GetCurrentUser")
-            .Produces<object>(StatusCodes.Status200OK)
+            .Produces<object>()
             .RequireAuthorization();
 
         // User management endpoints
         auth.MapGet("/users", GetAllUsers)
             .WithName("GetAllUsers")
-            .Produces<List<UserDto>>(StatusCodes.Status200OK)
+            .Produces<List<UserDto>>()
             .RequireAuthorization(policy => policy.RequireRole(UserRoles.Admin));
 
         auth.MapPut("/users/{userId}/roles", UpdateUserRoles)
@@ -51,12 +52,10 @@ public static class AuthEndpoints
         var response = await mediator.Send(command);
 
         if (!response.Succeeded)
-        {
             return Results.ValidationProblem(new Dictionary<string, string[]>
             {
                 { "Errors", response.Errors.ToArray() }
             });
-        }
 
         return Results.Ok(response);
     }
@@ -70,21 +69,18 @@ public static class AuthEndpoints
     private static IResult GetCurrentUser(HttpContext httpContext)
     {
         var user = httpContext.User;
-        if (user.Identity?.IsAuthenticated != true)
-        {
-            return Results.Unauthorized();
-        }
+        if (user.Identity?.IsAuthenticated != true) return Results.Unauthorized();
 
         var roles = user.Claims
-            .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+            .Where(c => c.Type == ClaimTypes.Role)
             .Select(c => c.Value)
             .ToList();
 
         return Results.Ok(new
         {
-            Email = user.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value,
-            UserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
-            Roles = roles,
+            Email = user.FindFirst(ClaimTypes.Email)?.Value,
+            UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+            Roles = roles
         });
     }
 
@@ -109,10 +105,7 @@ public static class AuthEndpoints
 
         var result = await mediator.Send(command);
 
-        if (result)
-        {
-            return Results.Ok(new { message = "User roles updated successfully" });
-        }
+        if (result) return Results.Ok(new { message = "User roles updated successfully" });
 
         return Results.Problem("Failed to update user roles");
     }

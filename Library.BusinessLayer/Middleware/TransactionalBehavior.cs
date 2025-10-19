@@ -1,4 +1,4 @@
-using Library.BusinessLayer.CQRS;
+using Library.Application.CQRS;
 using Library.DataAccess.Data;
 using MediatR;
 
@@ -36,7 +36,7 @@ public sealed class TransactionalBehavior<TRequest, TResponse>(ApplicationDbCont
                 throw;
             }
         }
-        
+
         return await next(ct);
     }
 }
