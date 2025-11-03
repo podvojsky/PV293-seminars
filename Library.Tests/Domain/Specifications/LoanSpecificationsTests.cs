@@ -1,5 +1,7 @@
+using System.Reflection;
 using Library.Domain.Aggregates.Loan;
 using Library.Domain.Specifications;
+using Library.Domain.ValueObjects;
 
 namespace Library.Tests.Domain.Specifications;
 
@@ -11,16 +13,20 @@ public class LoanSpecificationsTests
         // Arrange
         var now = DateTime.UtcNow;
 
-        var overdueLoan1 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com", 14);
+        var overdueLoan1 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com",
+            PhoneNumber.Create("+420123456789"));
         SetDueDate(overdueLoan1, now.AddDays(-5)); // 5 days overdue
 
-        var overdueLoan2 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", "bob@example.com", 14);
+        var overdueLoan2 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", "bob@example.com",
+            PhoneNumber.Create("+420987654321"));
         SetDueDate(overdueLoan2, now.AddDays(-1)); // 1 day overdue
 
-        var activeLoan = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Carol", "carol@example.com", 14);
+        var activeLoan = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Carol", "carol@example.com",
+            PhoneNumber.Create("+420132547698"));
         SetDueDate(activeLoan, now.AddDays(5)); // Still 5 days to go
 
-        var returnedLoan = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Dave", "dave@example.com", 14);
+        var returnedLoan = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Dave", "dave@example.com",
+            PhoneNumber.Create("+420111222333444"));
         SetDueDate(returnedLoan, now.AddDays(-3));
         returnedLoan.Return();
 
@@ -48,13 +54,16 @@ public class LoanSpecificationsTests
         // Arrange
         var now = DateTime.UtcNow;
 
-        var overdueLoan1 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com", 14);
+        var overdueLoan1 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com",
+            PhoneNumber.Create("+420123456789"));
         SetDueDate(overdueLoan1, now.AddDays(-10)); // Very overdue
 
-        var overdueLoan2 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", "bob@example.com", 14);
+        var overdueLoan2 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", "bob@example.com",
+            PhoneNumber.Create("+420987654321"));
         SetDueDate(overdueLoan2, now.AddDays(-1)); // Just overdue
 
-        var overdueLoan3 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Carol", "carol@example.com", 14);
+        var overdueLoan3 = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Carol", "carol@example.com",
+            PhoneNumber.Create("+420132547698"));
         SetDueDate(overdueLoan3, now.AddDays(-5)); // Moderately overdue
 
         var loans = new List<Loan> { overdueLoan2, overdueLoan3, overdueLoan1 };
@@ -77,18 +86,21 @@ public class LoanSpecificationsTests
         // Arrange
         var now = DateTime.UtcNow;
 
-        var veryOverdue = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com", 14);
+        var veryOverdue = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com",
+            PhoneNumber.Create("+420123456789"));
         SetDueDate(veryOverdue, now.AddDays(-10)); // 10 days overdue
 
-        var moderatelyOverdue = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", "bob@example.com", 14);
+        var moderatelyOverdue = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Bob", "bob@example.com",
+            PhoneNumber.Create("+420987654321"));
         SetDueDate(moderatelyOverdue, now.AddDays(-5)); // 5 days overdue
 
-        var slightlyOverdue = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Carol", "carol@example.com", 14);
+        var slightlyOverdue = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Carol", "carol@example.com",
+            PhoneNumber.Create("+420132547698"));
         SetDueDate(slightlyOverdue, now.AddDays(-1)); // 1 day overdue
 
         var loans = new List<Loan> { veryOverdue, moderatelyOverdue, slightlyOverdue };
 
-        var spec = new OverdueLoansSpec(minimumDaysOverdue: 7);
+        var spec = new OverdueLoansSpec(7);
 
         // Act
         var result = spec.Evaluate(loans).ToList();
@@ -102,7 +114,8 @@ public class LoanSpecificationsTests
     public void OverdueLoansSpec_ReturnsEmptyWhenNoOverdueLoans()
     {
         // Arrange
-        var activeLoan = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com", 14);
+        var activeLoan = Loan.Create(Guid.NewGuid(), Guid.NewGuid(), "Alice", "alice@example.com",
+            PhoneNumber.Create("+420123456789"));
         var loans = new List<Loan> { activeLoan };
 
         var spec = new OverdueLoansSpec();
@@ -118,14 +131,14 @@ public class LoanSpecificationsTests
     private static void SetDueDate(Loan loan, DateTime dueDate)
     {
         var prop = typeof(Loan).GetProperty(nameof(Loan.DueDate),
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         prop!.SetValue(loan, dueDate);
     }
 
     private static void SetLoanDate(Loan loan, DateTime loanDate)
     {
         var prop = typeof(Loan).GetProperty(nameof(Loan.LoanDate),
-            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         prop!.SetValue(loan, loanDate);
     }
 }

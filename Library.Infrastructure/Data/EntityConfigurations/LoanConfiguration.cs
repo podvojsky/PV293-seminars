@@ -21,6 +21,9 @@ public class LoanConfiguration : IEntityTypeConfiguration<Loan>
         builder.Property(e => e.Status)
             .HasConversion<string>();
 
+        builder.OwnsOne(e => e.BorrowerPhoneNumber,
+            borrowerPhoneBuilder => { borrowerPhoneBuilder.Property(p => p.Value).HasColumnName("Phone"); });
+
         // Configure Fines as owned entities
         builder.OwnsMany(e => e.Fines, finesBuilder =>
         {

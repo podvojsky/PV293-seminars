@@ -7,28 +7,30 @@ namespace Library.Domain.Aggregates.Loan;
 
 public class Loan : AggregateRoot
 {
-    public Guid BookId { get; private set; }
-    public Guid BorrowerId { get; private set; }
-    public string BorrowerName { get; private set; } = string.Empty;
-    public string BorrowerEmail { get; private set; } = string.Empty;
-    public DateTime LoanDate { get; private set; }
-    public DateTime DueDate { get; private set; }
-    public DateTime? ReturnDate { get; private set; }
-    public LoanStatus Status { get; private set; }
-
     private readonly List<Fine> _fines = new();
-
-    public IReadOnlyCollection<Fine> Fines => _fines.AsReadOnly();
 
     // Private constructor for EF Core
     private Loan()
     {
+        BorrowerPhoneNumber = PhoneNumber.Create("+420000000000");
     }
 
     // Constructor with ID for seeding
     private Loan(Guid id) : base(id)
     {
     }
+
+    public Guid BookId { get; private set; }
+    public Guid BorrowerId { get; private set; }
+    public string BorrowerName { get; private set; } = string.Empty;
+    public string BorrowerEmail { get; private set; } = string.Empty;
+    public PhoneNumber BorrowerPhoneNumber { get; private set; }
+    public DateTime LoanDate { get; private set; }
+    public DateTime DueDate { get; private set; }
+    public DateTime? ReturnDate { get; private set; }
+    public LoanStatus Status { get; private set; }
+
+    public IReadOnlyCollection<Fine> Fines => _fines.AsReadOnly();
 
     public static Guid DetermineBorrowerId(Guid? requestedBorrowerId, ClaimsPrincipal currentUser)
     {
@@ -46,9 +48,7 @@ public class Loan : AggregateRoot
         if (requestedBorrowerId.HasValue)
         {
             if (!canLoanForOthers && requestedBorrowerId.Value != currentUserId)
-            {
                 throw new InvalidOperationException("Members can only create loans for themselves");
-            }
 
             return requestedBorrowerId.Value;
         }
@@ -62,6 +62,7 @@ public class Loan : AggregateRoot
         Guid borrowerId,
         string borrowerName,
         string borrowerEmail,
+        PhoneNumber borrowerPhoneNumber,
         int loanDurationDays = 14)
     {
         if (bookId == Guid.Empty)
@@ -76,6 +77,9 @@ public class Loan : AggregateRoot
         if (string.IsNullOrWhiteSpace(borrowerEmail))
             throw new ArgumentException("Borrower email cannot be empty", nameof(borrowerEmail));
 
+        if (string.IsNullOrWhiteSpace(borrowerPhoneNumber.ToString()))
+            throw new ArgumentException("Borrower phone cannot be empty", nameof(borrowerPhoneNumber));
+
         if (loanDurationDays <= 0)
             throw new ArgumentException("Loan duration must be positive", nameof(loanDurationDays));
 
@@ -88,6 +92,7 @@ public class Loan : AggregateRoot
             BorrowerId = borrowerId,
             BorrowerName = borrowerName,
             BorrowerEmail = borrowerEmail,
+            BorrowerPhoneNumber = borrowerPhoneNumber,
             LoanDate = DateTime.UtcNow,
             DueDate = DateTime.UtcNow.AddDays(loanDurationDays),
             Status = LoanStatus.Active
@@ -112,16 +117,14 @@ public class Loan : AggregateRoot
 
         Status = LoanStatus.Returned;
 
-        if (!HasOutstandingFines())
-        {
-            Complete();
-        }
+        if (!HasOutstandingFines()) Complete();
     }
 
     public void ExtendDueDate(int additionalDays)
     {
         if (Status != LoanStatus.Active)
-            throw new InvalidOperationException($"Cannot extend a loan with status: {Status}. Only active loans can be extended.");
+            throw new InvalidOperationException(
+                $"Cannot extend a loan with status: {Status}. Only active loans can be extended.");
 
         if (additionalDays <= 0)
             throw new ArgumentException("Additional days must be positive", nameof(additionalDays));
@@ -200,10 +203,7 @@ public class Loan : AggregateRoot
         fine.Pay(paymentReference);
 
         // Check if loan can be completed after paying this fine
-        if (Status == LoanStatus.Returned && !HasOutstandingFines())
-        {
-            Complete();
-        }
+        if (Status == LoanStatus.Returned && !HasOutstandingFines()) Complete();
     }
 
     public void WaiveFine(Guid fineId, string waiveReason)
@@ -213,21 +213,44 @@ public class Loan : AggregateRoot
 
         fine.Waive(waiveReason);
 
-        if (Status == LoanStatus.Returned && !HasOutstandingFines())
-        {
-            Complete();
-        }
+        if (Status == LoanStatus.Returned && !HasOutstandingFines()) Complete();
     }
 
-    public bool IsActive() => Status == LoanStatus.Active;
-    public bool IsReturned() => Status == LoanStatus.Returned || Status == LoanStatus.Completed;
-    public bool IsCompleted() => Status == LoanStatus.Completed;
-    public bool IsOverdue() => Status == LoanStatus.Active && DateTime.UtcNow > DueDate;
-    public int GetDaysOverdue() => IsOverdue() ? (DateTime.UtcNow - DueDate).Days : 0;
-    public int GetLoanDuration() => (ReturnDate ?? DateTime.UtcNow).Subtract(LoanDate).Days;
+    public bool IsActive()
+    {
+        return Status == LoanStatus.Active;
+    }
+
+    public bool IsReturned()
+    {
+        return Status == LoanStatus.Returned || Status == LoanStatus.Completed;
+    }
+
+    public bool IsCompleted()
+    {
+        return Status == LoanStatus.Completed;
+    }
+
+    public bool IsOverdue()
+    {
+        return Status == LoanStatus.Active && DateTime.UtcNow > DueDate;
+    }
+
+    public int GetDaysOverdue()
+    {
+        return IsOverdue() ? (DateTime.UtcNow - DueDate).Days : 0;
+    }
+
+    public int GetLoanDuration()
+    {
+        return (ReturnDate ?? DateTime.UtcNow).Subtract(LoanDate).Days;
+    }
 
 
-    public bool HasOutstandingFines() => _fines.Any(f => f.IsPending);
+    public bool HasOutstandingFines()
+    {
+        return _fines.Any(f => f.IsPending);
+    }
 }
 
 public enum LoanStatus
@@ -235,5 +258,5 @@ public enum LoanStatus
     Active, // Book is currently borrowed
     Returned, // Book has been returned but may have outstanding fines
     Lost, // Book has been marked as lost
-    Completed, // Book returned and all fines settled - loan fully resolved
+    Completed // Book returned and all fines settled - loan fully resolved
 }
