@@ -14,18 +14,19 @@ namespace Yestino.Wolverine;
 
 public static class WolverineSetup
 {
-    static readonly TimeSpan[] DefaultRetryIntervals = [50.Milliseconds(), 250.Milliseconds(), 2.Seconds()];
+    private static readonly TimeSpan[] DefaultRetryIntervals = [50.Milliseconds(), 250.Milliseconds(), 2.Seconds()];
 
     public static WebApplicationBuilder SetupWolverine(this WebApplicationBuilder builder)
     {
         builder.Services.AddWolverineHttp();
         builder.Host.ApplyJasperFxExtensions();
-        
+
         builder.Host.UseWolverine(opts =>
         {
             opts.ApplicationAssembly = typeof(Program).Assembly;
             opts.Discovery.IncludeAssembly(typeof(DependencyInjection).Assembly);
             opts.Discovery.IncludeAssembly(typeof(Warehouse.DependencyInjection).Assembly);
+            opts.Discovery.IncludeAssembly(typeof(Order.DependencyInjection).Assembly);
             // TODO: register modules here
 
             opts.CodeGeneration.TypeLoadMode = TypeLoadMode.Static;
@@ -41,11 +42,11 @@ public static class WolverineSetup
 
             opts.UseEntityFrameworkCoreTransactions();
             opts.Policies.AutoApplyTransactions();
-            
+
             opts.Durability.MessageStorageSchemaName = "wolverine";
             opts.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
             opts.Durability.MessageIdentity = MessageIdentity.IdAndDestination;
-            
+
             opts.Policies.UseDurableLocalQueues();
             opts.Policies.UseDurableInboxOnAllListeners();
             opts.Policies.UseDurableOutboxOnAllSendingEndpoints();
@@ -60,7 +61,6 @@ public static class WolverineSetup
 
             opts.OnException<DbUpdateConcurrencyException>().RetryWithCooldown(DefaultRetryIntervals)
                 .Then.ScheduleRetryIndefinitely(5.Minutes());
-
         });
 
         return builder;

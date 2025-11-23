@@ -9,19 +9,20 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
-        <PackageReference Include="WolverineFx.FluentValidation" Version="5.0.0" />
-        <PackageReference Include="WolverineFx.Postgresql" Version="5.0.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0"/>
+        <PackageReference Include="WolverineFx.FluentValidation" Version="5.0.0"/>
+        <PackageReference Include="WolverineFx.Postgresql" Version="5.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Yestino.Common\Yestino.Common.csproj" />
-      <ProjectReference Include="..\Yestino.ProductCatalog\Yestino.ProductCatalog.csproj" />
-      <ProjectReference Include="..\Yestino.Warehouse\Yestino.Warehouse.csproj" />
+        <ProjectReference Include="..\Yestino.Common\Yestino.Common.csproj"/>
+        <ProjectReference Include="..\Yestino.Order\Yestino.Order.csproj"/>
+        <ProjectReference Include="..\Yestino.ProductCatalog\Yestino.ProductCatalog.csproj"/>
+        <ProjectReference Include="..\Yestino.Warehouse\Yestino.Warehouse.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Internal\Generated\" />
+        <Folder Include="Internal\Generated\"/>
     </ItemGroup>
 
 </Project>
