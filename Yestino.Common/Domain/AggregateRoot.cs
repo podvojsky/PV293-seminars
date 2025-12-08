@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Yestino.Common.Domain;
 
@@ -15,8 +14,7 @@ public abstract class AggregateRoot : Entity<Guid>
     {
     }
 
-    [ConcurrencyCheck]
-    public Guid Version { get; set; }
+    public int Version { get; set; }
 
     [NotMapped]
     public IReadOnlyList<DomainEvent> DomainEvents => _domainEvents;

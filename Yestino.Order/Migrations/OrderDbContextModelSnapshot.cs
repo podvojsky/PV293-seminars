@@ -128,9 +128,9 @@ namespace Yestino.Order.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid>("Version")
+                    b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

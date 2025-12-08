@@ -44,7 +44,15 @@ public class ChangeOrderItemQuantityEndpoint
                         null
                     );
 
-                order.AddItem(product, command.NewQuantity);
+                // ADD NEW ITEM
+                var newItem = order.AddItem(product, command.NewQuantity);
+
+                // Return update + correct event
+                return (
+                    Results.NoContent(),
+                    Storage.Update(order),
+                    new OrderItemQuantityChanged(order.Id, newItem.Id, product.Id, newItem.Quantity)
+                );
             }
         }
         else
@@ -59,6 +67,6 @@ public class ChangeOrderItemQuantityEndpoint
         }
 
         return (Results.NoContent(), Storage.Update(order),
-            new OrderItemQuantityChanged(order.Id, orderItem?.Id, product?.Id, orderItem?.Quantity));
+            new OrderItemQuantityChanged(order.Id, orderItem?.Id, product?.Id, command.NewQuantity));
     }
 }

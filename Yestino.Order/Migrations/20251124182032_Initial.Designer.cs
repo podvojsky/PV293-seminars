@@ -5,23 +5,23 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Yestino.ProductCatalog.Infrastructure;
+using Yestino.Order.Infrastructure;
 
 #nullable disable
 
-namespace Yestino.ProductCatalog.Migrations
+namespace Yestino.Order.Migrations
 {
-    [DbContext(typeof(ProductCatalogDbContext))]
-    [Migration("20251102160709_AddPriceToProduct")]
-    partial class AddPriceToProduct
+    [DbContext(typeof(OrderDbContext))]
+    [Migration("20251124182032_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("product_catalog")
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasDefaultSchema("order")
+                .HasAnnotation("ProductVersion", "9.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("WolverineEnabled", "true");
 
@@ -119,7 +119,57 @@ namespace Yestino.ProductCatalog.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Yestino.ProductCatalog.Entities.Product", b =>
+            modelBuilder.Entity("Yestino.Order.Entities.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsPayed")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Orders", "order");
+                });
+
+            modelBuilder.Entity("Yestino.Order.Entities.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("OrderItems", "order");
+                });
+
+            modelBuilder.Entity("Yestino.Order.Entities.ProductReadModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -142,13 +192,21 @@ namespace Yestino.ProductCatalog.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
-                    b.Property<Guid>("Version")
-                        .IsConcurrencyToken()
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.ToTable("Products", "product_catalog");
+                    b.ToTable("ProductReadModels", "order");
+                });
+
+            modelBuilder.Entity("Yestino.Order.Entities.OrderItem", b =>
+                {
+                    b.HasOne("Yestino.Order.Entities.Order", null)
+                        .WithMany("Items")
+                        .HasForeignKey("OrderId");
+                });
+
+            modelBuilder.Entity("Yestino.Order.Entities.Order", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

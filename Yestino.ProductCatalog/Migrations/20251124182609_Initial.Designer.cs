@@ -12,8 +12,8 @@ using Yestino.ProductCatalog.Infrastructure;
 namespace Yestino.ProductCatalog.Migrations
 {
     [DbContext(typeof(ProductCatalogDbContext))]
-    [Migration("20251026150248_AddIsActiveToProduct")]
-    partial class AddIsActiveToProduct
+    [Migration("20251124182609_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,7 +21,7 @@ namespace Yestino.ProductCatalog.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("product_catalog")
-                .HasAnnotation("ProductVersion", "9.0.10")
+                .HasAnnotation("ProductVersion", "9.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
                 .HasAnnotation("WolverineEnabled", "true");
 
@@ -119,7 +119,7 @@ namespace Yestino.ProductCatalog.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Yestino.ProductCatalog.Domain.Product", b =>
+            modelBuilder.Entity("Yestino.ProductCatalog.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -139,9 +139,12 @@ namespace Yestino.ProductCatalog.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<Guid>("Version")
+                    b.Property<decimal>("Price")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Version")
                         .IsConcurrencyToken()
-                        .HasColumnType("uuid");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

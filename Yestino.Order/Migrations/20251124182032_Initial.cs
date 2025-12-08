@@ -22,7 +22,7 @@ namespace Yestino.Order.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     TotalPrice = table.Column<decimal>(type: "numeric", nullable: false),
                     IsPayed = table.Column<bool>(type: "boolean", nullable: false),
-                    Version = table.Column<Guid>(type: "uuid", nullable: false)
+                    Version = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {

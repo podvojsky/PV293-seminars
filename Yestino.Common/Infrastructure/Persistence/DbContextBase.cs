@@ -22,12 +22,9 @@ public abstract class DbContextBase(DbContextOptions options, IMessageBus bus) :
             .Select(e => e.Entity)
             .ToList();
 
-        foreach (var aggregateRoot in aggregateRoots)
-        {
-            aggregateRoot.Version = Guid.NewGuid();
-        }
+        foreach (var aggregateRoot in aggregateRoots) aggregateRoot.Version += 1;
     }
-    
+
     private async Task PublishDomainEventsAsync()
     {
         var aggregateRoots = ChangeTracker
@@ -42,9 +39,6 @@ public abstract class DbContextBase(DbContextOptions options, IMessageBus bus) :
 
         aggregateRoots.ForEach(e => e.ClearDomainEvents());
 
-        foreach (var domainEvent in domainEvents)
-        {
-            await bus.PublishAsync(domainEvent);
-        }
+        foreach (var domainEvent in domainEvents) await bus.PublishAsync(domainEvent);
     }
 }
